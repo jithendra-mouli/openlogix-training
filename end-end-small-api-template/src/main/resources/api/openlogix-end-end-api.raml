@@ -1,0 +1,44 @@
+#%RAML 1.0
+title: openlogix-end-end-sapi
+baseUri: api/v1
+mediaType: 
+- application/json
+protocols: [HTTP,HTTPS]
+version: 1.0.0
+description: Openlogix-end-end-sapi is developed to create a sysytem api
+
+/health:
+  get:
+    responses:
+      200:
+        body:
+          example:
+              {
+                 "messgae": "success",
+                 "appName": p('app.name'),
+                 "timeStamp": now()
+              }
+/greetins:
+  get:
+    headers:
+    queryParameters:
+      day: 
+        type: string
+        required: false
+      date: 
+        type: number
+        required: false
+    responses:
+      200:
+        body:
+          example:
+            {
+              "todays-greeting": "test-greeting"
+            }
+
+      400:
+        body:
+          example: 
+              {
+              "messgae": "greeting not found"
+              }

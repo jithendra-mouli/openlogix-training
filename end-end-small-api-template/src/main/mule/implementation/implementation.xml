@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<validation:config name="Validation_Config" doc:name="Validation Config" doc:id="27c9f2c8-3e25-4ab1-89ed-563c79e8ac3c" />
+	<flow name="greetings" doc:id="e16684e0-ddfa-4e24-bf0e-16758ca3a8ec" >
+		<logger level="INFO" doc:name="First Logger" doc:id="5707a241-b68c-4140-9ee4-e65e87e6fe2a" message="First Logger"/>
+		<set-variable value="#[attributes.queryParams.day]" doc:name="day" doc:id="51e70306-a6c2-44c3-bc41-b80563ab9ee5" variableName="day"/>
+		<logger level="INFO" doc:name="Logger 1" doc:id="aafe6859-a8e2-4734-bd26-f4ce6c013125"/>
+		<set-variable value="#[attributes.queryParams.date]" doc:name="date" doc:id="e1f52fbe-bd56-435e-88c9-0a7cd083fb85" variableName="date"/>
+		<logger level="INFO" doc:name="Logger 2" doc:id="9f4dde50-0142-42b2-a9be-e680982d1146"/>
+		<set-payload value="HELLO WORLD" doc:name="Set Payload" doc:id="b3ccaa23-a584-441f-894b-69175de14208" />
+		<choice doc:name="Choice" doc:id="8297dfb7-4225-4efc-b36a-ab2e02480ee5" >
+			<when expression="#[attributes.queryParams.day != null and attributes.queryParams.date == null]">
+				<validation:is-null doc:name="Is null" doc:id="e41ed9f7-6f64-47a0-b743-da9dbad2f593" value="#[error.description]" config-ref="Validation_Config"/>
+				<ee:transform doc:name="Transform Message" doc:id="95d175e0-44e9-4c13-abd9-3c2991e71ae6">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "attribute date is required"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression="#[attributes.queryParams.day == null and attributes.queryParams.date != null]">
+				<validation:is-null doc:name="Is null" doc:id="f2a7b9df-87e6-4c74-b7a8-1ed06abae8a8" config-ref="Validation_Config" value="#[error.description]"/>
+				<ee:transform doc:name="Transform Message" doc:id="52a74af2-e92d-40b6-823e-69ba7f812475">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "attribute day is required"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression="#[attributes.queryParams.day == null and attributes.queryParams.date == null]">
+				<validation:is-null doc:name="Is null" doc:id="370b76fc-49af-45e6-b11a-78e5c753ef70" value="#[error.description]" config-ref="Validation_Config"/>
+				<ee:transform doc:name="Transform Message" doc:id="f8bc3808-90aa-4727-a238-3ed8ba6a4515">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "attributes day and date are required"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<validation:validate-size doc:name="Validate size" doc:id="c8bbf9c0-06d9-4316-b5df-3dd9c294e7af" value="#[payload]" min="6" max="30" config-ref="Validation_Config" >
+				</validation:validate-size>
+				<ee:transform doc:name="Transform Message" doc:id="434cc5c6-78e2-4b9c-b4d6-bcb7686edb52" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "Validation Success"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Last Logger" doc:id="74df1dad-d7f5-459a-bfaf-3448063628c2" message="last logger"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="c0e08cfb-160a-41fa-aa4e-71a93eb566c6" type="VALIDATION:INVALID_SIZE">
+				<set-payload value="#[error.description]" doc:name="Set Payload" doc:id="f29b650f-a041-4ac8-8688-6f05b8821a8e" />
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>
